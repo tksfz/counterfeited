@@ -47,6 +47,11 @@ package object eval {
       // @todo straight flush
     }
 
+    /**
+     * @todo create a version that can return the hand itself (the Cards) or at least
+     *       a helper that forms the HandClass without having to invoke ._1 on all
+     *       the cards
+     */
     def rankClassifier(hand: Hand7): HandClass = {
       val rankCounts = hand.cards.groupBy(_.rank).mapValues(_.size).toIndexedSeq
       val nDistinctRanks = rankCounts.size
@@ -57,41 +62,42 @@ package object eval {
           None
         }
 
-      // @todo the sorting and reverse stuff is broken
       if (!straightOpt.isDefined) {
-        val orderedRankCounts = rankCounts.sortBy(_.swap).reverse
+        // Rank counts ordered by descending (count, rank)
+        // Rank's Ordering is already descending, so we just need to reverse the counts
+        val orderedRankCounts = rankCounts.sortBy(_.swap.map_1(- _))
         // @todo make a canonical suit ordering
-        // @todo actually implement a sorter for Cards - might exist from case classes
         val topRankCount = orderedRankCounts.head
+        val tailRankCounts = orderedRankCounts.tail
         if (topRankCount._2 == 4) {
           // 4K
-          val kicker = orderedRankCounts.tail.maxBy(_._1)
+          val kicker = tailRankCounts.maxBy(_._1)
           Quads(topRankCount._1, kicker._1)
         } else if (topRankCount._2 == 3) {
           // FH or 3K
           // Consider the case where there is another 3K and a 1P.  Then the bottom of the FH
           // could be either the 3K (taken as a 1P) or it could be the 1P, depending on whichever has higher rank
-          val pairCandidates = orderedRankCounts.tail.takeWhile(_._2 >= 2)
+          val pairCandidates = tailRankCounts.takeWhile(_._2 >= 2)
           if (!pairCandidates.isEmpty) {
             val bestPair = pairCandidates.head
             FullHouse(topRankCount._1, bestPair._1)
           } else {
-            val kickers = orderedRankCounts.tail.sortBy(_._1).reverse.take(2)
+            val kickers = tailRankCounts.sortBy(_._1).take(2)
             Trips(topRankCount._1, kickers(0)._1, kickers(1)._1)
           }
         } else if (topRankCount._2 == 2) {
           // Two Pair or One Pair
-          val secondRankCount = orderedRankCounts(1)
+          val secondRankCount = tailRankCounts.head
           if (secondRankCount._2 == 2) {
-            val kicker = orderedRankCounts.tail.tail.sortBy(_._1).reverse.head
+            val kicker = tailRankCounts.tail.sortBy(_._1).head
             TwoPair(topRankCount._1, secondRankCount._1, kicker._1)
           } else {
-            val kickers = orderedRankCounts.tail.sortBy(_._1).reverse.take(3)
+            val kickers = tailRankCounts.sortBy(_._1).take(3)
             Pair(topRankCount._1, kickers(0)._1, kickers(1)._1, kickers(2)._1)
           }
         } else {
           // HighCard
-          HighCard(hand.cards.sortBy(_.rank).reverse.take(5).map(_.rank))
+          HighCard(hand.cards.sortBy(_.rank).take(5).map(_.rank))
         }
       } else {
         straightOpt.get
@@ -100,19 +106,26 @@ package object eval {
 
     def findStraight(ranks: IndexedSeq[Rank]): Option[Straight] = {
       // @todo prepend the ace
-      val orderedRanks = ranks.sortBy(_.value)
+      val orderedRanks = ranks.sorted
       val n = orderedRanks.size
       var straight: Option[Straight] = None
       var i = n - 5
       while(i >= 0 && !straight.isDefined) {
-        val highCard = orderedRanks(ranks.size - 1 - i)
-        val diff = highCard.value - orderedRanks(i).value
+        val highCard = orderedRanks(i)
+        val lowCard = orderedRanks(ranks.size - 1 - i)
+        val diff = highCard.value - lowCard.value
         if (diff == 5 - 1 || diff == (5 - Ace.value)) {
           straight = Some(Straight(highCard))
         }
         i = i - 1
       }
       straight
+    }
+
+    implicit class MappablePair[A, B](pair: Tuple2[A, B]) {
+      def map_1[C](fn: A => C) = {
+        (fn(pair._1), pair._2)
+      }
     }
   }
 }
