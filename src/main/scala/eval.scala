@@ -14,7 +14,7 @@ package object eval {
    * @param classRanking the relative rankings of the hand classes themselves
    * @param abbrev a short display label for this hand class
    */
-  abstract class HandClass(classRanking: Int, abbrev: String)
+  abstract class HandClass(classRanking: Int, val abbrev: String)
   case class StraightFlush(highCard: Rank) extends HandClass(8, "SF")
   case class Quads(rank: Rank, kicker: Rank) extends HandClass(7, "4K")
   case class FullHouse(trips: Rank, pair: Rank) extends HandClass(6, "FH")
