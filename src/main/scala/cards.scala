@@ -18,6 +18,9 @@ package object cards {
       case _ => value.toString.charAt(0)
     }
   }
+  object Rank {
+    implicit val orderByDescendingRank = Ordering.by[Rank, Int](- _.value)
+  }
 
   val Deuce = Rank(2)
   val Trey = Rank(3)
@@ -35,7 +38,7 @@ package object cards {
 
   case class Card(rank: Rank, suit: Suit)
 
-  case class Hand(cards: Seq[Card])
+  case class Hand(cards: IndexedSeq[Card])
 
   case class Deck(cards: Seq[Card])
 
