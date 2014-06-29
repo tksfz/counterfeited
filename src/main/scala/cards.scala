@@ -36,10 +36,27 @@ package object cards {
   val King = Rank(13)
   val Ace = Rank(14)
 
+  val allRanks = Seq(Deuce, Trey, Four, Five, Six, Seven, Eight, Nine, Ten, Jack, Queen, King, Ace)
+  val allSuits = Seq(Spade, Heart, Club, Diamond)
+  val rankChars = allRanks.map(r => r.abbrev -> r).toMap
+  val suitChars = allSuits.map(s => s.abbrev -> s).toMap
+
   case class Card(rank: Rank, suit: Suit)
 
   case class Hand(cards: IndexedSeq[Card])
 
   case class Deck(cards: Seq[Card])
+
+  def parseHand(s: String) = {
+    var s2 = s.filterNot(_ == ' ')
+    val cards = for(cardStr <- s2.grouped(2)) yield {
+      val rankChar = cardStr(0)
+      val suitChar = cardStr(1)
+      val rank = rankChars(rankChar)
+      val suit = suitChars(suitChar)
+      Card(rank, suit)
+    }
+    Hand(cards.toIndexedSeq)
+  }
 
 }

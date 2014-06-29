@@ -33,9 +33,8 @@ package object eval {
   type Classifier = Hand => HandClass
 
   val simple7Classifier: Classifier = { hand: Hand =>
-
     findFlush(hand) getOrElse {
-      rankClassifier(hand)
+      rankBasedClassifier(hand)
     }
   }
 
@@ -55,7 +54,7 @@ package object eval {
    *       a helper that forms the HandClass without having to invoke ._1 on all
    *       the cards
    */
-  def rankClassifier(hand: Hand): HandClass = {
+  def rankBasedClassifier(hand: Hand): HandClass = {
     val rankCounts = hand.cards.groupBy(_.rank).mapValues(_.size).toIndexedSeq
     val nDistinctRanks = rankCounts.size
     val straightOpt =
@@ -130,6 +129,18 @@ package object eval {
   implicit class MappablePair[A, B](pair: Tuple2[A, B]) {
     def map_1[C](fn: A => C) = {
       (fn(pair._1), pair._2)
+    }
+  }
+
+}
+
+object Main {
+  def main(args: Array[String]) = {
+    while(true) {
+      val handStr = Console.readLine("hand> ")
+      val hand = parseHand(handStr)
+      val handClass = eval.simple7Classifier(hand)
+      Console.println(handClass.toString)
     }
   }
 }
