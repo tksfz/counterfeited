@@ -34,17 +34,19 @@ package object eval {
 
   val simple7Classifier: Classifier = { hand: Hand7 =>
 
-    findFlush(hand) map { flush =>
-      Flush(flush.map(_.rank))
-    } getOrElse {
+    findFlush(hand) getOrElse {
       rankClassifier(hand)
     }
 
     def findFlush(hand: Hand7) = {
       hand.cards.groupBy(_.suit).find(_._2.size >= 5).map { case (suit, cards) =>
-        cards.sortBy(_.rank).take(5)
+        val ranks = cards.map(_.rank)
+        findStraight(ranks) map { straight =>
+          StraightFlush(straight.highCard)
+        } getOrElse {
+          Flush(ranks.sorted.take(5))
+        }
       }
-      // @todo straight flush
     }
 
     /**
