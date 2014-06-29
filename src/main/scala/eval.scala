@@ -48,10 +48,10 @@ package object eval {
   object HandClass {
     import Ordering.Implicits.seqDerivedOrdering
 
-    implicit val ordering: Ordering[HandClass] = Ordering.by(hc => (hc.classRanking, hc.ranksToCompare))
+    implicit val ordering: Ordering[HandClass] = Ordering.by(hc => (-hc.classRanking, hc.ranksToCompare))
   }
 
-  implicit val handOrdering: Ordering[Hand] = Ordering.by(hand => simpleClassifier(hand))
+  val handEvaluator: Ordering[Hand] = Ordering.by(hand => simpleClassifier(hand))
 
   // Some aliases, for fun
   val Wheel = Straight(Five)
@@ -110,7 +110,7 @@ package object eval {
         // FH or 3K
         // Consider the case where there is another 3K and a 1P.  Then the bottom of the FH
         // could be either the 3K (taken as a 1P) or it could be the 1P, depending on whichever has higher rank
-        val pairCandidates = tailRankCounts.takeWhile(_._2 >= 2)
+        val pairCandidates = tailRankCounts.takeWhile(_._2 >= 2).sortBy(_._1)
         if (!pairCandidates.isEmpty) {
           val bestPair = pairCandidates.head
           FullHouse(topRankCount._1, bestPair._1)
