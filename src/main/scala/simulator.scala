@@ -10,18 +10,29 @@ package object simulator {
   private[this] val rand = new Random
 
   def computeShowdownHands(hole1: Card, hole2: Card, nTrials: Int = 100000) = {
-    val handClassCounts = new mutable.HashMap[String, Int]
+    val handClassCounts = new mutable.HashMap[String, Int].withDefaultValue(0)
     for(i <- 0 until nTrials) {
       val holeCards = Seq(hole1, hole2)
       val board = generateRandomCards(5, holeCards)
       val handClass = eval.simpleClassifier(Hand((holeCards ++ board).toIndexedSeq)).abbrev
-      if (handClassCounts.contains(handClass)) {
-        handClassCounts(handClass) += 1
-      } else {
-        handClassCounts(handClass) = 1
-      }
+      handClassCounts(handClass) += 1
     }
     handClassCounts.toMap
+  }
+
+  def compareShowdownEquity(playerHands: Seq[Hand], nTrials: Int = 100000) = {
+    val wins = new mutable.HashMap[Int, Double].withDefaultValue(0)
+    for(i <- 0 until nTrials) {
+      val board = generateRandomCards(5, playerHands.flatMap(_.cards))
+      val fullPlayerHands = playerHands.map(playerHand => Hand(playerHand.cards ++ board))
+      val playerHandClasses = fullPlayerHands.map(simpleClassifier(_))
+      val winningHandClass = playerHandClasses.max
+      val winningPlayers = playerHandClasses.zipWithIndex.filter(_._1 == winningHandClass).map(_._2)
+      for(iPlayer <- winningPlayers) {
+        wins(iPlayer) += 1.0 / winningPlayers.size
+      }
+    }
+    wins
   }
 
   def generateRandomCards(n: Int, dead: Seq[Card]): Seq[Card] = {
@@ -51,8 +62,20 @@ object Simulator {
     val handClassCounts = simulator.computeShowdownHands(hand.cards(0), hand.cards(1))
     Console.println(handClassCounts)
     val total = handClassCounts.values.sum
-    Console.println(handClassCounts.values.sum)
+    Console.println(total)
     val handClassPercents = handClassCounts.mapValues(_ / total.asInstanceOf[Double])
     Console.println(handClassPercents)
+  }
+}
+
+object Showdown {
+  def main(args: Array[String]) = {
+    val hands = Console.readLine("hole cards> ").split("\\s+").map(parseHand(_)).toSeq
+    val wins = simulator.compareShowdownEquity(hands)
+    Console.println(wins)
+    val total = wins.values.sum
+    Console.println(total)
+    val winPercents = wins.mapValues(_ / total.asInstanceOf[Double])
+    Console.println(winPercents)
   }
 }
