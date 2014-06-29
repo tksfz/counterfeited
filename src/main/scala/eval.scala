@@ -104,7 +104,7 @@ package object eval {
       val tailRankCounts = orderedRankCounts.tail
       if (topRankCount._2 == 4) {
         // 4K
-        val kicker = tailRankCounts.maxBy(_._1)
+        val kicker = tailRankCounts.minBy(_._1)
         Quads(topRankCount._1, kicker._1)
       } else if (topRankCount._2 == 3) {
         // FH or 3K

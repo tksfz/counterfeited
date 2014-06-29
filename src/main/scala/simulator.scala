@@ -26,7 +26,7 @@ package object simulator {
       val board = generateRandomCards(5, playerHands.flatMap(_.cards))
       val fullPlayerHands = playerHands.map(playerHand => Hand(playerHand.cards ++ board))
       val playerHandClasses = fullPlayerHands.map(simpleClassifier(_))
-      val winningHandClass = playerHandClasses.max
+      val winningHandClass = playerHandClasses.min
       val winningPlayers = playerHandClasses.zipWithIndex.filter(_._1 == winningHandClass).map(_._2)
       for(iPlayer <- winningPlayers) {
         wins(iPlayer) += 1.0 / winningPlayers.size
