@@ -105,19 +105,21 @@ package object eval {
     }
 
     def findStraight(ranks: IndexedSeq[Rank]): Option[Straight] = {
-      // @todo prepend the ace
-      val orderedRanks = ranks.sorted
+      var orderedRanks = ranks.sorted
+      if (orderedRanks(0) == Ace) {
+        orderedRanks = orderedRanks :+ Ace
+      }
       val n = orderedRanks.size
       var straight: Option[Straight] = None
-      var i = n - 5
-      while(i >= 0 && !straight.isDefined) {
+      var i = 0
+      while(i <= n - 5 && !straight.isDefined) {
         val highCard = orderedRanks(i)
-        val lowCard = orderedRanks(ranks.size - 1 - i)
+        val lowCard = orderedRanks(i + 5 - 1)
         val diff = highCard.value - lowCard.value
-        if (diff == 5 - 1 || diff == (5 - Ace.value)) {
+        if (diff == 6 - 2 || diff == (5 - Ace.value)) {
           straight = Some(Straight(highCard))
         }
-        i = i - 1
+        i = i + 1
       }
       straight
     }
