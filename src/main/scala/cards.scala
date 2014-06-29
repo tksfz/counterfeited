@@ -8,10 +8,15 @@ package object cards {
   val Club = Suit('c')
   val Diamond = Suit('d')
 
-  case class Rank(value: Int, abbrev: Char)
-
-  object Rank {
-    def apply(value: Int) = new Rank(value, value.toString.charAt(0))
+  case class Rank(value: Int) extends AnyVal {
+    def abbrev = this match {
+      case Ten => 'T'
+      case Jack => 'J'
+      case Queen => 'Q'
+      case King => 'K'
+      case Ace => 'A'
+      case _ => value.toString.charAt(0)
+    }
   }
 
   val Deuce = Rank(2)
@@ -22,11 +27,11 @@ package object cards {
   val Seven = Rank(7)
   val Eight = Rank(8)
   val Nine = Rank(9)
-  val Ten = Rank(10, 'T')
-  val Jack = Rank(11, 'J')
-  val Queen = Rank(12, 'Q')
-  val King = Rank(13, 'K')
-  val Ace = Rank(14, 'A')
+  val Ten = Rank(10)
+  val Jack = Rank(11)
+  val Queen = Rank(12)
+  val King = Rank(13)
+  val Ace = Rank(14)
 
   case class Card(rank: Rank, suit: Suit)
 
