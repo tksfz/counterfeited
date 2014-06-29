@@ -14,7 +14,7 @@ package object simulator {
     for(i <- 0 until nTrials) {
       val holeCards = Seq(hole1, hole2)
       val board = generateRandomCards(5, holeCards)
-      val handClass = eval.simple7Classifier(Hand((holeCards ++ board).toIndexedSeq)).abbrev
+      val handClass = eval.simpleClassifier(Hand((holeCards ++ board).toIndexedSeq)).abbrev
       if (handClassCounts.contains(handClass)) {
         handClassCounts(handClass) += 1
       } else {

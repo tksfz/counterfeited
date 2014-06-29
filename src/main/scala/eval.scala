@@ -32,7 +32,10 @@ package object eval {
 
   type Classifier = Hand => HandClass
 
-  val simple7Classifier: Classifier = { hand: Hand =>
+  /**
+   * A simple and slow but general classifier that works for 5-card through 7-card hands
+   */
+  val simpleClassifier: Classifier = { hand: Hand =>
     findFlush(hand) getOrElse {
       rankBasedClassifier(hand)
     }
@@ -139,7 +142,7 @@ object Main {
     while(true) {
       val handStr = Console.readLine("hand> ")
       val hand = parseHand(handStr)
-      val handClass = eval.simple7Classifier(hand)
+      val handClass = eval.simpleClassifier(hand)
       Console.println(handClass.toString)
     }
   }
