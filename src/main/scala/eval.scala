@@ -14,16 +14,44 @@ package object eval {
    * @param classRanking the relative rankings of the hand classes themselves
    * @param abbrev a short display label for this hand class
    */
-  abstract class HandClass(classRanking: Int, abbrev: String)
-  case class StraightFlush(highCard: Rank) extends HandClass(8, "SF")
-  case class Quads(rank: Rank, kicker: Rank) extends HandClass(7, "4K")
-  case class FullHouse(trips: Rank, pair: Rank) extends HandClass(6, "FH")
-  case class Flush(ranks: Seq[Rank]) extends HandClass(5, "F")
-  case class Straight(highCard: Rank) extends HandClass(4, "S")
-  case class Trips(rank: Rank, k1: Rank, k2: Rank) extends HandClass(3, "3K")
-  case class TwoPair(highPair: Rank, lowPair: Rank, kicker: Rank) extends HandClass(2, "2P")
-  case class Pair(rank: Rank, k1: Rank, k2: Rank, k3: Rank) extends HandClass(1, "1P")
-  case class HighCard(ranks: Seq[Rank]) extends HandClass(0, "HC")
+  abstract class HandClass(val classRanking: Int, val abbrev: String) {
+    def ranksToCompare: Seq[Rank]
+  }
+  case class StraightFlush(highCard: Rank) extends HandClass(8, "SF") {
+    val ranksToCompare = Seq(highCard)
+  }
+  case class Quads(rank: Rank, kicker: Rank) extends HandClass(7, "4K") {
+    val ranksToCompare = Seq(rank, kicker)
+  }
+  case class FullHouse(trips: Rank, pair: Rank) extends HandClass(6, "FH") {
+    val ranksToCompare = Seq(trips, pair)
+  }
+  case class Flush(ranks: Seq[Rank]) extends HandClass(5, "F") {
+    val ranksToCompare = ranks
+  }
+  case class Straight(highCard: Rank) extends HandClass(4, "S") {
+    val ranksToCompare = Seq(highCard)
+  }
+  case class Trips(rank: Rank, k1: Rank, k2: Rank) extends HandClass(3, "3K") {
+    val ranksToCompare = Seq(rank, k1, k2)
+  }
+  case class TwoPair(highPair: Rank, lowPair: Rank, kicker: Rank) extends HandClass(2, "2P") {
+    val ranksToCompare = Seq(highPair, lowPair, kicker)
+  }
+  case class Pair(rank: Rank, k1: Rank, k2: Rank, k3: Rank) extends HandClass(1, "1P") {
+    val ranksToCompare = Seq(rank, k1, k2, k3)
+  }
+  case class HighCard(ranks: Seq[Rank]) extends HandClass(0, "HC") {
+    val ranksToCompare = ranks
+  }
+
+  object HandClass {
+    import Ordering.Implicits.seqDerivedOrdering
+
+    implicit val ordering: Ordering[HandClass] = Ordering.by(hc => (-hc.classRanking, hc.ranksToCompare))
+  }
+
+  val handEvaluator: Ordering[Hand] = Ordering.by(hand => simpleClassifier(hand))
 
   // Some aliases, for fun
   val Wheel = Straight(Five)
@@ -32,7 +60,10 @@ package object eval {
 
   type Classifier = Hand => HandClass
 
-  val simple7Classifier: Classifier = { hand: Hand =>
+  /**
+   * A simple and slow but general classifier that works for 5-card through 7-card hands
+   */
+  val simpleClassifier: Classifier = { hand: Hand =>
     findFlush(hand) getOrElse {
       rankBasedClassifier(hand)
     }
@@ -73,13 +104,13 @@ package object eval {
       val tailRankCounts = orderedRankCounts.tail
       if (topRankCount._2 == 4) {
         // 4K
-        val kicker = tailRankCounts.maxBy(_._1)
+        val kicker = tailRankCounts.minBy(_._1)
         Quads(topRankCount._1, kicker._1)
       } else if (topRankCount._2 == 3) {
         // FH or 3K
         // Consider the case where there is another 3K and a 1P.  Then the bottom of the FH
         // could be either the 3K (taken as a 1P) or it could be the 1P, depending on whichever has higher rank
-        val pairCandidates = tailRankCounts.takeWhile(_._2 >= 2)
+        val pairCandidates = tailRankCounts.takeWhile(_._2 >= 2).sortBy(_._1)
         if (!pairCandidates.isEmpty) {
           val bestPair = pairCandidates.head
           FullHouse(topRankCount._1, bestPair._1)
@@ -139,7 +170,7 @@ object Main {
     while(true) {
       val handStr = Console.readLine("hand> ")
       val hand = parseHand(handStr)
-      val handClass = eval.simple7Classifier(hand)
+      val handClass = eval.simpleClassifier(hand)
       Console.println(handClass.toString)
     }
   }
