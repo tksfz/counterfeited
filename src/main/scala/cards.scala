@@ -47,6 +47,8 @@ package object cards {
 
   case class Deck(cards: Seq[Card])
 
+  val allCards = for(suit <- allSuits; rank <- allRanks) yield Card(rank, suit)
+
   def parseHand(s: String) = {
     var s2 = s.filterNot(_ == ' ')
     val cards = for(cardStr <- s2.grouped(2)) yield {
