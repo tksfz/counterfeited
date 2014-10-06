@@ -41,7 +41,9 @@ package object cards {
   val rankChars = allRanks.map(r => r.abbrev -> r).toMap
   val suitChars = allSuits.map(s => s.abbrev -> s).toMap
 
-  case class Card(rank: Rank, suit: Suit)
+  case class Card(rank: Rank, suit: Suit) {
+    override def toString = rank.abbrev.toString + suit.abbrev
+  }
 
   case class Hand(cards: IndexedSeq[Card])
 
